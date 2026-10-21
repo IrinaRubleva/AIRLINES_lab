@@ -1,0 +1,204 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+body {
+    background: #1e1e1e;
+    color: #d4d4d4;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    padding: 40px;
+    margin: 0;
+}
+h2 {
+    color: #cccccc;
+    font-weight: 400;
+    font-size: 18px;
+    margin-bottom: 20px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 13px;
+}
+th {
+    text-align: left;
+    padding: 10px 14px;
+    border-bottom: 1px solid #404040;
+    color: #858585;
+    font-weight: 400;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+}
+td {
+    padding: 8px 14px;
+    border-bottom: 1px solid #2d2d2d;
+    color: #d4d4d4;
+}
+tr:hover td {
+    background: #2a2d2e;
+}
+.num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+.models {
+    color: #9cdcfe;
+    font-size: 12px;
+}
+.rank {
+    color: #6a6a6a;
+    width: 40px;
+    text-align: center;
+}
+.score-high {
+    color: #f48771;
+    font-weight: bold;
+}
+</style>
+</head>
+<body>
+
+<h2>Anomaly Detection Results (Top 15)</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th class="rank">#</th>
+            <th>ID</th>
+            <th class="num">Total Score</th>
+            <th class="num">Models</th>
+            <th>Detected by</th>
+        </tr>
+    </thead>
+    <tbody>
+
+        <tr>
+            <td class="rank">21</td>
+            <td>5293 500602</td>
+            <td class="num score-high">28.00</td>
+            <td class="num">3</td>
+            <td class="models">IsolationForest, OneClassSVM, KNN_Distance</td>
+        </tr>
+    
+        <tr>
+            <td class="rank">20</td>
+            <td>4992 905133</td>
+            <td class="num score-high">18.00</td>
+            <td class="num">3</td>
+            <td class="models">OneClassSVM, EllipticEnvelope, KNN_Distance</td>
+        </tr>
+    
+        <tr>
+            <td class="rank">3</td>
+            <td>1028 207088</td>
+            <td class="num ">15.00</td>
+            <td class="num">2</td>
+            <td class="models">LOF, KNN_Distance</td>
+        </tr>
+    
+        <tr>
+            <td class="rank">15</td>
+            <td>3050 260754</td>
+            <td class="num ">15.00</td>
+            <td class="num">2</td>
+            <td class="models">OneClassSVM, KNN_Distance</td>
+        </tr>
+    
+        <tr>
+            <td class="rank">0</td>
+            <td>0185 106233</td>
+            <td class="num score-high">14.00</td>
+            <td class="num">3</td>
+            <td class="models">IsolationForest, OneClassSVM, KNN_Distance</td>
+        </tr>
+    
+        <tr>
+            <td class="rank">14</td>
+            <td>2420 116077</td>
+            <td class="num ">10.00</td>
+            <td class="num">1</td>
+            <td class="models">LOF</td>
+        </tr>
+    
+        <tr>
+            <td class="rank">33</td>
+            <td>8816 864475</td>
+            <td class="num ">9.00</td>
+            <td class="num">2</td>
+            <td class="models">OneClassSVM, KNN_Distance</td>
+        </tr>
+    
+        <tr>
+            <td class="rank">18</td>
+            <td>4013 363390</td>
+            <td class="num ">9.00</td>
+            <td class="num">1</td>
+            <td class="models">EllipticEnvelope</td>
+        </tr>
+    
+        <tr>
+            <td class="rank">24</td>
+            <td>6038 903499</td>
+            <td class="num ">8.00</td>
+            <td class="num">2</td>
+            <td class="models">OneClassSVM, KNN_Distance</td>
+        </tr>
+    
+        <tr>
+            <td class="rank">29</td>
+            <td>7544 655717</td>
+            <td class="num ">8.00</td>
+            <td class="num">2</td>
+            <td class="models">LOF, OneClassSVM</td>
+        </tr>
+    
+        <tr>
+            <td class="rank">5</td>
+            <td>1311 440150</td>
+            <td class="num ">8.00</td>
+            <td class="num">1</td>
+            <td class="models">IsolationForest</td>
+        </tr>
+    
+        <tr>
+            <td class="rank">16</td>
+            <td>3101 754432</td>
+            <td class="num ">8.00</td>
+            <td class="num">1</td>
+            <td class="models">EllipticEnvelope</td>
+        </tr>
+    
+        <tr>
+            <td class="rank">32</td>
+            <td>8537 137481</td>
+            <td class="num ">8.00</td>
+            <td class="num">1</td>
+            <td class="models">LOF</td>
+        </tr>
+    
+        <tr>
+            <td class="rank">9</td>
+            <td>1548 113497</td>
+            <td class="num ">7.00</td>
+            <td class="num">2</td>
+            <td class="models">IsolationForest, OneClassSVM</td>
+        </tr>
+    
+        <tr>
+            <td class="rank">22</td>
+            <td>5405 898615</td>
+            <td class="num ">7.00</td>
+            <td class="num">1</td>
+            <td class="models">LOF</td>
+        </tr>
+    
+    </tbody>
+</table>
+
+</body>
+</html>

@@ -1,0 +1,200 @@
+
+<style>
+.suspects-table {
+    border-collapse: collapse;
+    width: 100%;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+.suspects-table th {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 15px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 14px;
+}
+.suspects-table td {
+    padding: 12px;
+    text-align: center;
+    border-bottom: 1px solid #e0e0e0;
+}
+.suspects-table tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+.suspects-table tr:hover {
+    background-color: #e3f2fd;
+    transition: 0.3s;
+}
+.critical { background-color: #ffebee !important; color: #c62828; font-weight: bold; }
+.high { background-color: #fff3e0 !important; color: #e65100; font-weight: bold; }
+.medium { background-color: #fffde7 !important; color: #f57f17; }
+
+.model-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    margin: 2px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: bold;
+    color: white;
+}
+.if-badge { background: #1976d2; }       /* IsolationForest */
+.lof-badge { background: #7b1fa2; }      /* LOF */
+.ocsvm-badge { background: #388e3c; }    /* OneClassSVM */
+.knn-badge { background: #f57c00; }      /* KNN_Distance */
+.ee-badge { background: #c2185b; }       /* EllipticEnvelope */
+</style>
+
+<table class="suspects-table">
+    <thead>
+        <tr>
+            <th>Rank</th>
+            <th>ID</th>
+            <th>Total Score</th>
+            <th>Models</th>
+            <th>Threat Level</th>
+            <th>Detected By</th>
+        </tr>
+    </thead>
+    <tbody>
+
+        <tr class="critical">
+            <td>#1</td>
+            <td><b>2</b></td>
+            <td><b>977.34</b></td>
+            <td><b>4</b>/4</td>
+            <td>🔴 CRITICAL</td>
+            <td><span class="model-badge if-badge">IsolationForest</span><span class="model-badge lof-badge">LOF</span><span class="model-badge ocsvm-badge">OneClassSVM</span><span class="model-badge knn-badge">KNN_Distance</span></td>
+        </tr>
+    
+        <tr class="critical">
+            <td>#2</td>
+            <td><b>21</b></td>
+            <td><b>5,293.50</b></td>
+            <td><b>3</b>/4</td>
+            <td>🔴 CRITICAL</td>
+            <td><span class="model-badge if-badge">IsolationForest</span><span class="model-badge ocsvm-badge">OneClassSVM</span><span class="model-badge knn-badge">KNN_Distance</span></td>
+        </tr>
+    
+        <tr class="critical">
+            <td>#3</td>
+            <td><b>20</b></td>
+            <td><b>4,992.91</b></td>
+            <td><b>3</b>/4</td>
+            <td>🔴 CRITICAL</td>
+            <td><span class="model-badge ocsvm-badge">OneClassSVM</span><span class="model-badge ee-badge">EllipticEnvelope</span><span class="model-badge knn-badge">KNN_Distance</span></td>
+        </tr>
+    
+        <tr class="critical">
+            <td>#4</td>
+            <td><b>0</b></td>
+            <td><b>185.11</b></td>
+            <td><b>3</b>/4</td>
+            <td>🔴 CRITICAL</td>
+            <td><span class="model-badge if-badge">IsolationForest</span><span class="model-badge ocsvm-badge">OneClassSVM</span><span class="model-badge knn-badge">KNN_Distance</span></td>
+        </tr>
+    
+        <tr class="high">
+            <td>#5</td>
+            <td><b>33</b></td>
+            <td><b>8,816.86</b></td>
+            <td><b>2</b>/4</td>
+            <td>🟠 HIGH</td>
+            <td><span class="model-badge ocsvm-badge">OneClassSVM</span><span class="model-badge knn-badge">KNN_Distance</span></td>
+        </tr>
+    
+        <tr class="high">
+            <td>#6</td>
+            <td><b>29</b></td>
+            <td><b>7,544.66</b></td>
+            <td><b>2</b>/4</td>
+            <td>🟠 HIGH</td>
+            <td><span class="model-badge lof-badge">LOF</span><span class="model-badge ocsvm-badge">OneClassSVM</span></td>
+        </tr>
+    
+        <tr class="high">
+            <td>#7</td>
+            <td><b>24</b></td>
+            <td><b>6,038.90</b></td>
+            <td><b>2</b>/4</td>
+            <td>🟠 HIGH</td>
+            <td><span class="model-badge ocsvm-badge">OneClassSVM</span><span class="model-badge knn-badge">KNN_Distance</span></td>
+        </tr>
+    
+        <tr class="high">
+            <td>#8</td>
+            <td><b>15</b></td>
+            <td><b>3,050.26</b></td>
+            <td><b>2</b>/4</td>
+            <td>🟠 HIGH</td>
+            <td><span class="model-badge ocsvm-badge">OneClassSVM</span><span class="model-badge knn-badge">KNN_Distance</span></td>
+        </tr>
+    
+        <tr class="high">
+            <td>#9</td>
+            <td><b>9</b></td>
+            <td><b>1,548.11</b></td>
+            <td><b>2</b>/4</td>
+            <td>🟠 HIGH</td>
+            <td><span class="model-badge if-badge">IsolationForest</span><span class="model-badge ocsvm-badge">OneClassSVM</span></td>
+        </tr>
+    
+        <tr class="high">
+            <td>#10</td>
+            <td><b>3</b></td>
+            <td><b>1,028.21</b></td>
+            <td><b>2</b>/4</td>
+            <td>🟠 HIGH</td>
+            <td><span class="model-badge lof-badge">LOF</span><span class="model-badge knn-badge">KNN_Distance</span></td>
+        </tr>
+    
+        <tr class="medium">
+            <td>#11</td>
+            <td><b>32</b></td>
+            <td><b>8,537.14</b></td>
+            <td><b>1</b>/4</td>
+            <td>🟡 MEDIUM</td>
+            <td><span class="model-badge lof-badge">LOF</span></td>
+        </tr>
+    
+        <tr class="medium">
+            <td>#12</td>
+            <td><b>18</b></td>
+            <td><b>4,013.36</b></td>
+            <td><b>1</b>/4</td>
+            <td>🟡 MEDIUM</td>
+            <td><span class="model-badge ee-badge">EllipticEnvelope</span></td>
+        </tr>
+    
+        <tr class="medium">
+            <td>#13</td>
+            <td><b>16</b></td>
+            <td><b>3,101.75</b></td>
+            <td><b>1</b>/4</td>
+            <td>🟡 MEDIUM</td>
+            <td><span class="model-badge ee-badge">EllipticEnvelope</span></td>
+        </tr>
+    
+        <tr class="medium">
+            <td>#14</td>
+            <td><b>14</b></td>
+            <td><b>2,420.12</b></td>
+            <td><b>1</b>/4</td>
+            <td>🟡 MEDIUM</td>
+            <td><span class="model-badge lof-badge">LOF</span></td>
+        </tr>
+    
+        <tr class="medium">
+            <td>#15</td>
+            <td><b>5</b></td>
+            <td><b>1,311.44</b></td>
+            <td><b>1</b>/4</td>
+            <td>🟡 MEDIUM</td>
+            <td><span class="model-badge if-badge">IsolationForest</span></td>
+        </tr>
+    
+    </tbody>
+</table>

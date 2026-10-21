@@ -1,0 +1,36 @@
+|ID|Total_Score|Models_Count|Models_List
+2|0977 338850|34|4|IsolationForest, LOF, OneClassSVM, KNN_Distance
+21|5293 500602|28|3|IsolationForest, OneClassSVM, KNN_Distance
+20|4992 905133|18|3|OneClassSVM, EllipticEnvelope, KNN_Distance
+3|1028 207088|15|2|LOF, KNN_Distance
+15|3050 260754|15|2|OneClassSVM, KNN_Distance
+0|0185 106233|14|3|IsolationForest, OneClassSVM, KNN_Distance
+14|2420 116077|10|1|LOF
+33|8816 864475|9|2|OneClassSVM, KNN_Distance
+18|4013 363390|9|1|EllipticEnvelope
+24|6038 903499|8|2|OneClassSVM, KNN_Distance
+29|7544 655717|8|2|LOF, OneClassSVM
+5|1311 440150|8|1|IsolationForest
+16|3101 754432|8|1|EllipticEnvelope
+32|8537 137481|8|1|LOF
+9|1548 113497|7|2|IsolationForest, OneClassSVM
+22|5405 898615|7|1|LOF
+25|6689 332299|7|1|EllipticEnvelope
+30|8176 892394|7|1|IsolationForest
+4|1181 213093|6|1|IsolationForest
+34|9504 642696|6|1|EllipticEnvelope
+6|1379 543723|5|1|IsolationForest
+13|2326 484258|5|1|KNN_Distance
+31|8211 370516|5|1|EllipticEnvelope
+8|1530 068060|4|1|LOF
+11|2006 962150|4|1|KNN_Distance
+27|7006 039700|4|1|EllipticEnvelope
+1|0801 171124|3|1|EllipticEnvelope
+10|1810 413944|3|1|LOF
+17|3487 135982|2|1|EllipticEnvelope
+19|4076 926383|2|1|LOF
+26|6937 933652|2|1|IsolationForest
+7|1439 758058|1|1|OneClassSVM
+12|2294 770067|1|1|IsolationForest
+23|5817 794453|1|1|EllipticEnvelope
+28|7314 180345|1|1|LOF

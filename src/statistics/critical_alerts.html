@@ -1,0 +1,147 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+body {
+    background: #1e1e1e;
+    color: #d4d4d4;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    padding: 40px;
+    margin: 0;
+    max-width: 900px;
+    margin: 0 auto;
+}
+h2 {
+    color: #f48771;
+    font-weight: 400;
+    font-size: 20px;
+    margin-bottom: 30px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border-bottom: 1px solid #404040;
+    padding-bottom: 10px;
+}
+.alert-card {
+    background: #252526;
+    border-left: 4px solid #f48771;
+    padding: 20px;
+    margin-bottom: 25px;
+    border-radius: 0 4px 4px 0;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+.alert-card.bonus {
+    border-left-color: #dcdcaa;
+}
+.card-header {
+    font-size: 16px;
+    font-weight: bold;
+    color: #ffffff;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+}
+.card-header .icon {
+    margin-right: 10px;
+    font-size: 20px;
+}
+.data-row {
+    display: flex;
+    margin-bottom: 8px;
+    font-size: 13px;
+}
+.data-label {
+    width: 160px;
+    color: #858585;
+    flex-shrink: 0;
+}
+.data-value {
+    color: #9cdcfe;
+    font-weight: bold;
+}
+.data-value.highlight {
+    color: #f48771;
+}
+.data-value.bonus-highlight {
+    color: #dcdcaa;
+}
+.verdict {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #3e3e42;
+    font-size: 13px;
+    color: #cccccc;
+    line-height: 1.5;
+}
+.verdict strong {
+    color: #ffffff;
+}
+</style>
+</head>
+<body>
+
+<h2>🚨 КРИТИЧЕСКИЕ НАХОДКИ (CRITICAL ALERTS)</h2>
+
+<!-- КАРТОЧКА 1: ПОДДЕЛЬНЫЙ ПАСПОРТ -->
+<div class="alert-card">
+    <div class="card-header">
+        <span class="icon">🛂</span> ПОДДЕЛЬНЫЙ / РАЗДЕЛЕННЫЙ ДОКУМЕНТ (Hard Fraud)
+    </div>
+    <div class="data-row">
+        <span class="data-label">Номер документа:</span>
+        <span class="data-value highlight">8248 013778</span>
+    </div>
+    <div class="data-row">
+        <span class="data-label">Источник:</span>
+        <span class="data-value">BoardingData.csv</span>
+    </div>
+    <div class="data-row">
+        <span class="data-label">Зафиксировано личностей:</span>
+        <span class="data-value highlight">2 и более (разные ФИО и даты рождения)</span>
+    </div>
+    <div class="data-row">
+        <span class="data-label">Пример 1:</span>
+        <span class="data-value">GLEBOV GORDEI M. (12/31/1982)</span>
+    </div>
+    <div class="data-row">
+        <span class="data-label">Пример 2:</span>
+        <span class="data-value">BUROV RAMIL ALBERTOVICH (08/24/1995)</span>
+    </div>
+    <div class="verdict">
+        <strong>Вердикт системы:</strong> Критическое нарушение. Один и тот же номер паспорта используется разными людьми с несовместимыми демографическими данными. Алгоритм кластеризации (`spies_finder`) выявил >1 кластера идентичности для одного документа. Требуется немедленная ручная проверка службой безопасности.
+    </div>
+</div>
+
+<!-- КАРТОЧКА 2: ОБЩАЯ БОНУСНАЯ КАРТА -->
+<div class="alert-card bonus">
+    <div class="card-header">
+        <span class="icon">💳</span> МАХИНАЦИИ С ПРОГРАММОЙ ЛОЯЛЬНОСТИ
+    </div>
+    <div class="data-row">
+        <span class="data-label">Номер карты:</span>
+        <span class="data-value bonus-highlight">FB 139888197</span>
+    </div>
+    <div class="data-row">
+        <span class="data-label">Программа:</span>
+        <span class="data-value">Flying Blue</span>
+    </div>
+    <div class="data-row">
+        <span class="data-label">Зафиксировано пользователей:</span>
+        <span class="data-value bonus-highlight">2 разных пассажира</span>
+    </div>
+    <div class="data-row">
+        <span class="data-label">Пассажир 1:</span>
+        <span class="data-value">GOLOVINA OLESIA</span>
+    </div>
+    <div class="data-row">
+        <span class="data-label">Пассажир 2:</span>
+        <span class="data-value">MASLENNIKOV ROMAN</span>
+    </div>
+    <div class="verdict">
+        <strong>Вердикт системы:</strong> Нарушение правил программы лояльности. Бонусная карта является именной и не подлежит передаче. Совпадение номера карты у разных людей в базах `Group 1` (операционные данные) и `Group 2` (лояльность) указывает на возможный фрод, накрутку миль или использование чужого статуса.
+    </div>
+</div>
+
+</body>
+</html>
