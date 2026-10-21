@@ -3,13 +3,14 @@
 
 Проверка A: один человек (ФИО + ДР) — разные документы.
 Проверка B: год выдачи паспорта != birth + 14 / + 20 / + 45
-             (с учётом неоднозначности 1900+YY / 2000+YY).
+             (с учётом неоднозначности 1900+YY / 2000+YY и допуска ±3 года).
 Проверка D: паспорт выдан раньше года рождения (артефакт).
 
 Результаты:
   resources/processed/changed_documents.csv
   resources/processed/artefacts.csv
-  src/documents_checker/SPIES.md
+  SPIES.md
+  report.md (для вывода в VIEW)
 """
 
 import csv
@@ -20,21 +21,15 @@ from pathlib import Path
 # ---------- пути ----------
 
 BASE = Path(__file__).resolve().parents[2]
-TEMP = BASE / "resources" / "processed" / "temp"
+TEMP = BASE / "resources" / "processed"
 
-OUT_DIFF     = BASE / "resources" / "processed" / "changed_documents.csv"
+OUT_DIFF = BASE / "resources" / "processed" / "changed_documents.csv"
 OUT_ARTEFACT = BASE / "resources" / "processed" / "artefacts.csv"
-OUT_SPIES    = Path(__file__).resolve().parent / "SPIES.md"
+OUT_SPIES = Path(__file__).resolve().parent / "SPIES.md"
+OUT_REPORT = Path(__file__).resolve().parent / "report.md"
 
 # ---------- КОНФИГ ----------
-#
-# fio        — колонки для склейки ФИО (в порядке Ф, И, О)
-# birth      — колонка с датой рождения
-# birth_fmt  — "MDY" / "DMY" / "YMD"
-# passport   — колонка с идентифицирующим документом
-# doc_kind   — "passport" (можно проверять серию) или "other"
-# delim      — разделитель; None → определится автоматически
-#
+
 FILES = [
     {
         "name": "BoardingData",
@@ -112,10 +107,12 @@ FILES = [
 
 CURRENT_YEAR = 2017
 VALID_ISSUE_OFFSETS = {14, 20, 45}
+OFFSET_TOLERANCE = 3  # Допуск в годах (серия может отличаться от года выдачи на 1-3 года)
 
 PASSPORT_RE = re.compile(r"^(\d{2})(\d{2})\s?(\d{6})$")
 EMPTY_VALUES = {"", "NOT PRESENTED", "N/A", "NONE", "-"}
 DELIMS = ["|", ";", ",", "\t"]
+
 
 # ---------- утилиты ----------
 
@@ -124,9 +121,10 @@ def normalize(v: str) -> str:
 
 
 def doc_normalize(v: str) -> str:
-    """Убирает хвост 'N/A' и лишние пробелы."""
+    """Очищает документ от N/A и лишних пробелов. Оставляет либо '1234 567890', либо '567890'."""
     s = normalize(v)
-    s = re.sub(r"\s*N/?A\s*$", "", s)
+    s = re.sub(r"\s*N/?A\s*$", "", s)  # Убираем N/A в конце
+    s = re.sub(r"^N/?A\s*", "", s)  # Убираем N/A в начале (на всякий случай)
     return s.strip()
 
 
@@ -166,7 +164,6 @@ def birth_year(birth):
 
 
 def _parse_passport_parts(doc):
-    """Возвращает (region, yy) или None, если строка не похожа на паспорт РФ."""
     m = PASSPORT_RE.match(doc)
     if not m:
         return None
@@ -178,7 +175,6 @@ def _parse_passport_parts(doc):
 
 
 def candidates_issue_years(doc):
-    """Возвращает список возможных годов выдачи: [1900+YY, 2000+YY]."""
     parts = _parse_passport_parts(doc)
     if parts is None:
         return []
@@ -186,60 +182,28 @@ def candidates_issue_years(doc):
     return [1900 + yy, 2000 + yy]
 
 
-def _delta_ok(issue_year, birth_y):
-    return (issue_year - birth_y) in VALID_ISSUE_OFFSETS
+def is_valid_issue_year(issue_year, birth_y):
+    """Проверяет, попадает ли год выдачи в окно с учетом допуска."""
+    for offset in VALID_ISSUE_OFFSETS:
+        expected = birth_y + offset
+        if abs(issue_year - expected) <= OFFSET_TOLERANCE:
+            return True
+    return False
 
 
 def determine_issue_year(doc, birth_y):
-    """
-    Определяет год выдачи паспорта с учётом неоднозначности 1900/2000.
-
-    Возвращает dict:
-      {
-        "chosen": int | None,          # выбранный год (если однозначно)
-        "candidates": [int, int],      # оба кандидата
-        "ambiguous": bool,             # True, если оба кандидата дают допустимую дельту
-        "suspicious": bool,            # True, если ни один кандидат не даёт допустимой дельты
-        "deltas": {int: int, int: int} # год -> дельта с birth_y
-      }
-    """
     cands = candidates_issue_years(doc)
     if not cands or birth_y is None:
-        return {
-            "chosen": None,
-            "candidates": cands,
-            "ambiguous": False,
-            "suspicious": False,
-            "deltas": {},
-        }
+        return {"chosen": None, "candidates": cands, "ambiguous": False, "suspicious": False, "deltas": {}}
 
     deltas = {y: y - birth_y for y in cands}
-    ok = [y for y in cands if _delta_ok(y, birth_y)]
+    ok = [y for y in cands if is_valid_issue_year(y, birth_y)]
 
     if len(ok) == 1:
-        return {
-            "chosen": ok[0],
-            "candidates": cands,
-            "ambiguous": False,
-            "suspicious": False,
-            "deltas": deltas,
-        }
+        return {"chosen": ok[0], "candidates": cands, "ambiguous": False, "suspicious": False, "deltas": deltas}
     if len(ok) == 2:
-        return {
-            "chosen": None,
-            "candidates": cands,
-            "ambiguous": True,
-            "suspicious": False,
-            "deltas": deltas,
-        }
-    # ни один не подходит
-    return {
-        "chosen": None,
-        "candidates": cands,
-        "ambiguous": False,
-        "suspicious": True,
-        "deltas": deltas,
-    }
+        return {"chosen": None, "candidates": cands, "ambiguous": True, "suspicious": False, "deltas": deltas}
+    return {"chosen": None, "candidates": cands, "ambiguous": False, "suspicious": True, "deltas": deltas}
 
 
 def read_file(cfg):
@@ -254,10 +218,7 @@ def read_file(cfg):
         reader = csv.DictReader(f, delimiter=delim)
         for row in reader:
             fio = build_fio(row, cfg.get("fio"))
-            birth = parse_birth(
-                row.get(cfg["birth"], "") if cfg.get("birth") else "",
-                cfg.get("birth_fmt", "YMD"),
-            )
+            birth = parse_birth(row.get(cfg["birth"], "") if cfg.get("birth") else "", cfg.get("birth_fmt", "YMD"))
             raw_doc = row.get(cfg["passport"], "") if cfg.get("passport") else ""
             doc = doc_normalize(raw_doc)
             if doc in EMPTY_VALUES:
@@ -286,9 +247,10 @@ def read_file(cfg):
     return out
 
 
-# ---------- проверка A: разные документы ----------
+# ---------- проверки ----------
 
 def check_different_docs(all_rows):
+    """Проверка A: один человек — разные документы."""
     by_person = defaultdict(set)
     row_index = {}
     for r in all_rows:
@@ -302,27 +264,35 @@ def check_different_docs(all_rows):
     for (fio, birth), docs in by_person.items():
         if len(docs) <= 1:
             continue
-        sorted_docs = sorted(docs)
-        for d in sorted_docs:
-            r = row_index[(fio, birth, d)]
-            others = [x for x in sorted_docs if x != d]
+
+        # Проверяем, не является ли один документ усеченной версией другого (только номер vs серия+номер)
+        # Если да, группируем их как один документ.
+        unique_docs = []
+        for d in sorted(docs):
+            is_dup = False
+            for u in unique_docs:
+                if d in u or u in d:  # если один является подстрокой другого
+                    is_dup = True
+                    break
+            if not is_dup:
+                unique_docs.append(d)
+
+        if len(unique_docs) <= 1:
+            continue
+
+        for d in unique_docs:
+            r = next(r for r in all_rows if r["fio"] == fio and r["birth"] == birth and r["doc"] == d)
+            others = [x for x in unique_docs if x != d]
             records.append({
-                "Type": "DIFFERENT_DOCS",
-                "Source": r["source"],
-                "FIO": fio,
-                "BirthDate": birth,
-                "Document": d,
-                "DocKind": r["doc_kind"],
-                "IssueYear": "",
-                "BirthYear": birth[:4],
+                "Type": "DIFFERENT_DOCS", "Source": r["source"], "FIO": fio, "BirthDate": birth,
+                "Document": d, "DocKind": r["doc_kind"], "IssueYear": "", "BirthYear": birth[:4],
                 "Detail": f"other docs: {'|'.join(others)}",
             })
     return records
 
 
-# ---------- проверка B: нетипичный год выдачи ----------
-
 def check_suspicious_issue(all_rows):
+    """Проверка B: нетипичный год выдачи."""
     records = []
     for r in all_rows:
         if r["doc_kind"] != "passport" or not r["doc"]:
@@ -336,44 +306,27 @@ def check_suspicious_issue(all_rows):
             continue
 
         if info["ambiguous"]:
-            # оба кандидата дают допустимую дельту — неоднозначность
-            detail = "; ".join(
-                f"{y} (Δ={info['deltas'][y]})" for y in info["candidates"]
-            )
+            detail = "; ".join(f"{y} (Δ={info['deltas'][y]})" for y in info["candidates"])
             records.append({
-                "Type": "AMBIGUOUS_ISSUE",
-                "Source": r["source"],
-                "FIO": r["fio"],
-                "BirthDate": r["birth"],
-                "Document": r["doc"],
-                "DocKind": r["doc_kind"],
-                "IssueYear": "|".join(str(y) for y in info["candidates"]),
-                "BirthYear": by,
+                "Type": "AMBIGUOUS_ISSUE", "Source": r["source"], "FIO": r["fio"], "BirthDate": r["birth"],
+                "Document": r["doc"], "DocKind": r["doc_kind"],
+                "IssueYear": "|".join(str(y) for y in info["candidates"]), "BirthYear": by,
                 "Detail": f"ambiguous candidates: {detail}",
             })
         elif info["suspicious"]:
             expected = sorted(by + off for off in VALID_ISSUE_OFFSETS)
-            detail = "; ".join(
-                f"{y} (Δ={info['deltas'][y]})" for y in info["candidates"]
-            )
+            detail = "; ".join(f"{y} (Δ={info['deltas'][y]})" for y in info["candidates"])
             records.append({
-                "Type": "SUSPICIOUS_ISSUE",
-                "Source": r["source"],
-                "FIO": r["fio"],
-                "BirthDate": r["birth"],
-                "Document": r["doc"],
-                "DocKind": r["doc_kind"],
-                "IssueYear": "|".join(str(y) for y in info["candidates"]),
-                "BirthYear": by,
-                "Detail": f"expected {expected}; candidates: {detail}",
+                "Type": "SUSPICIOUS_ISSUE", "Source": r["source"], "FIO": r["fio"], "BirthDate": r["birth"],
+                "Document": r["doc"], "DocKind": r["doc_kind"],
+                "IssueYear": "|".join(str(y) for y in info["candidates"]), "BirthYear": by,
+                "Detail": f"expected {expected} (±{OFFSET_TOLERANCE}); candidates: {detail}",
             })
-        # если chosen не None — всё в порядке, пропускаем
     return records
 
 
-# ---------- проверка D: паспорт выдан раньше рождения ----------
-
 def check_passport_before_birth(all_rows):
+    """Проверка D: паспорт выдан раньше рождения."""
     records = []
     for r in all_rows:
         if r["doc_kind"] != "passport" or not r["doc"]:
@@ -386,30 +339,20 @@ def check_passport_before_birth(all_rows):
         if not info["candidates"]:
             continue
 
-        # если есть выбранный год — проверяем только его
         if info["chosen"] is not None:
             if info["chosen"] < by:
                 records.append({
-                    "FIO": r["fio"],
-                    "BirthDate": r["birth"],
-                    "BirthYear": by,
-                    "Document": r["doc"],
-                    "IssueYear": info["chosen"],
-                    "Delta": info["chosen"] - by,
-                    "Source": r["source"],
+                    "FIO": r["fio"], "BirthDate": r["birth"], "BirthYear": by,
+                    "Document": r["doc"], "IssueYear": info["chosen"],
+                    "Delta": info["chosen"] - by, "Source": r["source"],
                 })
         else:
-            # неоднозначность или подозрительность: проверяем всех кандидатов
             for y in info["candidates"]:
                 if y < by:
                     records.append({
-                        "FIO": r["fio"],
-                        "BirthDate": r["birth"],
-                        "BirthYear": by,
-                        "Document": r["doc"],
-                        "IssueYear": y,
-                        "Delta": y - by,
-                        "Source": r["source"],
+                        "FIO": r["fio"], "BirthDate": r["birth"], "BirthYear": by,
+                        "Document": r["doc"], "IssueYear": y,
+                        "Delta": y - by, "Source": r["source"],
                     })
     records.sort(key=lambda x: x["Delta"])
     return records
@@ -417,10 +360,7 @@ def check_passport_before_birth(all_rows):
 
 # ---------- запись файлов ----------
 
-FIELDNAMES = [
-    "Type", "Source", "FIO", "BirthDate",
-    "Document", "DocKind", "IssueYear", "BirthYear", "Detail",
-]
+FIELDNAMES = ["Type", "Source", "FIO", "BirthDate", "Document", "DocKind", "IssueYear", "BirthYear", "Detail"]
 
 
 def write_diff(records):
@@ -436,15 +376,10 @@ def write_artefacts(records):
     OUT_ARTEFACT.parent.mkdir(parents=True, exist_ok=True)
     with OUT_ARTEFACT.open("w", newline="", encoding="utf-8") as f:
         w = csv.writer(f, delimiter=";")
-        w.writerow([
-            "FIO", "BirthDate", "BirthYear",
-            "Document", "IssueYear", "Delta", "Source",
-        ])
+        w.writerow(["FIO", "BirthDate", "BirthYear", "Document", "IssueYear", "Delta", "Source"])
         for r in records:
-            w.writerow([
-                r["FIO"], r["BirthDate"], r["BirthYear"],
-                r["Document"], r["IssueYear"], r["Delta"], r["Source"],
-            ])
+            w.writerow(
+                [r["FIO"], r["BirthDate"], r["BirthYear"], r["Document"], r["IssueYear"], r["Delta"], r["Source"]])
     print(f"[artefacts.csv] записей: {len(records)} -> {OUT_ARTEFACT}")
 
 
@@ -455,91 +390,118 @@ def update_spies_md(records, files_stats, artefacts):
     issue_r = [r for r in records if r["Type"] == "SUSPICIOUS_ISSUE"]
 
     lines = [header + "\n\n"]
-
-    # сводка по файлам
     lines.append("### Сводка по файлам\n\n")
     lines.append("| Файл | Строк прочитано |\n|---|---|\n")
     for name, n in files_stats:
         lines.append(f"| {name} | {n} |\n")
     lines.append(f"\nВсего подозрительных записей: **{len(records)}**\n\n")
 
-    # секция 1
     lines.append("### 1. Один человек — разные документы\n\n")
     lines.append(f"Найдено: **{len(diff_r)}**\n\n")
     if diff_r:
-        lines.append("| Источник | Тип | ФИО | ДР | Документ | Другие |\n")
-        lines.append("|---|---|---|---|---|---|\n")
+        lines.append("| Источник | Тип | ФИО | ДР | Документ | Другие |\n|---|---|---|---|---|---|\n")
         for r in diff_r[:20]:
             lines.append(
-                f"| {r['Source']} | {r['DocKind']} | {r['FIO']} | {r['BirthDate']} "
-                f"| {r['Document']} | {r['Detail']} |\n"
-            )
-        if len(diff_r) > 20:
-            lines.append(f"\n_…и ещё {len(diff_r) - 20} — см. changed_documents.csv._\n")
+                f"| {r['Source']} | {r['DocKind']} | {r['FIO']} | {r['BirthDate']} | {r['Document']} | {r['Detail']} |\n")
+        if len(diff_r) > 20: lines.append(f"\n_…и ещё {len(diff_r) - 20} — см. changed_documents.csv._\n")
         lines.append("\n")
 
-    # секция 2 — неоднозначные годы
     lines.append("### 2. Неоднозначный год выдачи паспорта (1900/2000)\n\n")
-    lines.append("Правило: серия `XXYY` может соответствовать как `1900+YY`, так и `2000+YY`. ")
-    lines.append("Если оба варианта дают допустимую дельту с годом рождения — запись попадает сюда.\n\n")
     lines.append(f"Найдено: **{len(ambiguous_r)}**\n\n")
     if ambiguous_r:
-        lines.append("| Источник | ФИО | ДР | Паспорт | Кандидаты | Δ |\n")
-        lines.append("|---|---|---|---|---|---|\n")
+        lines.append("| Источник | ФИО | ДР | Паспорт | Кандидаты | Δ |\n|---|---|---|---|---|---|\n")
         for r in ambiguous_r[:20]:
             lines.append(
-                f"| {r['Source']} | {r['FIO']} | {r['BirthDate']} "
-                f"| {r['Document']} | {r['IssueYear']} | {r['Detail']} |\n"
-            )
-        if len(ambiguous_r) > 20:
-            lines.append(f"\n_…и ещё {len(ambiguous_r) - 20} — см. changed_documents.csv._\n")
+                f"| {r['Source']} | {r['FIO']} | {r['BirthDate']} | {r['Document']} | {r['IssueYear']} | {r['Detail']} |\n")
+        if len(ambiguous_r) > 20: lines.append(f"\n_…и ещё {len(ambiguous_r) - 20} — см. changed_documents.csv._\n")
         lines.append("\n")
 
-    # секция 3 — нетипичные годы
     lines.append("### 3. Нетипичный год выдачи паспорта\n\n")
-    lines.append("Правило: год выдачи ∈ {birth + 14, birth + 20, birth + 45} ")
-    lines.append("(с учётом обоих кандидатов 1900/2000).\n\n")
     lines.append(f"Найдено: **{len(issue_r)}**\n\n")
     if issue_r:
-        lines.append("| Источник | ФИО | ДР | Паспорт | Кандидаты | Детали |\n")
-        lines.append("|---|---|---|---|---|---|\n")
+        lines.append("| Источник | ФИО | ДР | Паспорт | Кандидаты | Детали |\n|---|---|---|---|---|---|\n")
         for r in issue_r[:20]:
             lines.append(
-                f"| {r['Source']} | {r['FIO']} | {r['BirthDate']} "
-                f"| {r['Document']} | {r['IssueYear']} | {r['Detail']} |\n"
-            )
-        if len(issue_r) > 20:
-            lines.append(f"\n_…и ещё {len(issue_r) - 20} — см. changed_documents.csv._\n")
+                f"| {r['Source']} | {r['FIO']} | {r['BirthDate']} | {r['Document']} | {r['IssueYear']} | {r['Detail']} |\n")
+        if len(issue_r) > 20: lines.append(f"\n_…и ещё {len(issue_r) - 20} — см. changed_documents.csv._\n")
         lines.append("\n")
 
-    # секция 4 — артефакты
     lines.append("### 4. Паспорт выдан раньше рождения\n\n")
-    lines.append("Физически невозможно — вероятный артефакт или подделка.\n\n")
     lines.append(f"Найдено: **{len(artefacts)}**\n\n")
     if artefacts:
-        lines.append("| Источник | ФИО | ДР | Паспорт | Год выдачи | Δ (лет) |\n")
-        lines.append("|---|---|---|---|---|---|\n")
+        lines.append("| Источник | ФИО | ДР | Паспорт | Год выдачи | Δ (лет) |\n|---|---|---|---|---|---|\n")
         for a in artefacts[:20]:
             lines.append(
-                f"| {a['Source']} | {a['FIO']} | {a['BirthDate']} "
-                f"| {a['Document']} | {a['IssueYear']} | {a['Delta']} |\n"
-            )
-        if len(artefacts) > 20:
-            lines.append(f"\n_…и ещё {len(artefacts) - 20} — см. artefacts.csv._\n")
-        lines.append("\n")
+                f"| {a['Source']} | {a['FIO']} | {a['BirthDate']} | {a['Document']} | {a['IssueYear']} | {a['Delta']} |\n")
+        if len(artefacts) > 20: lines.append(f"\n_…и ещё {len(artefacts) - 20} — см. artefacts.csv._\n")
     else:
         lines.append("_Артефактов не найдено._\n")
 
     new_section = "".join(lines)
-
-    text = OUT_SPIES.read_text(encoding="utf-8") if OUT_SPIES.exists() \
-        else "# SPIES — подозрительные пассажиры\n\n"
-
+    text = OUT_SPIES.read_text(encoding="utf-8") if OUT_SPIES.exists() else "# SPIES — подозрительные пассажиры\n\n"
     pattern = re.compile(re.escape(header) + r".*?(?=\n## |\Z)", re.DOTALL)
-    text = pattern.sub("", text).rstrip() + "\n\n"
-    text += new_section
+    text = pattern.sub("", text).rstrip() + "\n\n" + new_section
     OUT_SPIES.write_text(text, encoding="utf-8")
     print(f"[SPIES.md] обновлён: {OUT_SPIES}")
+
+
+def write_report_md(records, files_stats, artefacts):
+    """Генерирует краткий отчет (для VIEW) человеческим языком."""
+    diff_r = [r for r in records if r["Type"] == "DIFFERENT_DOCS"]
+    ambiguous_r = [r for r in records if r["Type"] == "AMBIGUOUS_ISSUE"]
+    issue_r = [r for r in records if r["Type"] == "SUSPICIOUS_ISSUE"]
+
+    lines = []
+    lines.append("### Отчет по проверке документов пассажиров\n")
+    lines.append(
+        "Проанализировал данные из билетов и посадочных талонов. Ниже — краткая сводка по найденным нестыковкам.\n")
+
+    used_files = [name for name, count in files_stats if count > 0]
+    if used_files:
+        files_str = ", ".join(f"`{f}`" for f in used_files)
+        lines.append(f"**Данные для анализа брались из:** {files_str}\n")
+    else:
+        lines.append("**Данные для анализа:** файлы не найдены или пусты.\n")
+    lines.append("---\n")
+
+    # 1. Разные документы
+    lines.append("#### 1. Разные документы у одного человека")
+    if diff_r:
+        lines.append(
+            f"Нашлось **{len(diff_r)}** случаев. У людей с одинаковыми ФИО и датой рождения в базе висят разные паспорта или билеты. Стоит проверить на предмет смены документа или ошибки ввода.")
+        lines.append("Примеры:")
+        for r in diff_r[:3]:
+            lines.append(
+                f"- {r['FIO']} (ДР: {r['BirthDate']}): документы `{r['Document']}` и `{r['Detail'].replace('other docs: ', '')}`.")
+    else:
+        lines.append("Таких людей нет. Люди с одинаковыми ФИО и ДР используют одни и те же документы.")
+    lines.append("")
+
+    # 3. Странный год выдачи
+    lines.append("#### 2. Странный год выдачи паспорта")
+    if issue_r:
+        lines.append(
+            f"Целых **{len(issue_r)}** записей. Год выдачи паспорта не бьется с возрастом пассажира (с учетом допуска ±{OFFSET_TOLERANCE} лет).")
+        for r in issue_r[:3]:
+            lines.append(f"- {r['FIO']} (ДР: {r['BirthDate']}): паспорт `{r['Document']}`. {r['Detail']}.")
+    else:
+        lines.append("Странных годов не обнаружено. Все паспорта выданы в логичном возрасте.")
+    lines.append("")
+
+    # 4. Артефакты
+    lines.append("#### 3. Паспорт выдан раньше рождения")
+    if artefacts:
+        lines.append(
+            f"Обнаружено **{len(artefacts)}** артефактов (паспорт выдан до того, как человек родился). Cкорее всего, ошибка выгрузки или сдвиг дат. В основном это касается пассажиров 2000 года рождения с паспортами серии 1900.")
+        for a in artefacts[:3]:
+            lines.append(
+                f"- {a['FIO']} (ДР: {a['BirthDate']}): паспорт `{a['Document']}`, год выдачи {a['IssueYear']} (разница {a['Delta']} лет).")
+    else:
+        lines.append("Физически невозможных паспортов (выданных до рождения) не найдено.")
+    lines.append("")
+
+    OUT_REPORT.write_text("\n".join(lines), encoding="utf-8")
+    print(f"[report.md] обновлён: {OUT_REPORT}")
 
 
 # ---------- main ----------
@@ -557,18 +519,17 @@ def main():
         print("[!] Ни один файл не прочитан.")
         return
 
-    # A + B -> changed_documents.csv
     records = []
     records.extend(check_different_docs(all_rows))
     records.extend(check_suspicious_issue(all_rows))
     write_diff(records)
 
-    # D -> artefacts.csv
     artefacts = check_passport_before_birth(all_rows)
     write_artefacts(artefacts)
 
-    # отчёт
+    # Отчеты
     update_spies_md(records, files_stats, artefacts)
+    write_report_md(records, files_stats, artefacts)
 
 
 if __name__ == "__main__":
