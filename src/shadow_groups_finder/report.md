@@ -10,7 +10,7 @@
 Найдено теневых групп (минимум 2 совместных рейса): **582**.
 
 #### Самые подозрительные группы
-1. Группа из 2 человек: ABRAMOV GRIGORI IAROMIROVICH, SAVICKI OLEG VLADEVICH.
+1. Группа из 2 человек: SAVICKI OLEG VLADEVICH, ABRAMOV GRIGORI IAROMIROVICH.
    - Летали вместе **2** раз. Примеры рейсов: SU1500 (2017-02-28), SU1507 (2017-03-07).
    - Оформлялись через: не указаны.
 2. Группа из 2 человек: IGNATEV MIRON STEPANOVICH, ABRAMOVA ALBINA MAKAREVNA.
